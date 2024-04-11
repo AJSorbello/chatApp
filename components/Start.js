@@ -1,41 +1,67 @@
-import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { ImageBackground, StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 const Start = ({ navigation }) => {
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Chat')}>
-        <Text style={styles.buttonText}>Go to Chat</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+  const [name, setName] = useState('');
 
-const Chat = ({ navigation }) => {
+  const image = require('../assets/metalBG.png');
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Start')}>
-        <Text style={styles.buttonText}>Go to Start</Text>
-      </TouchableOpacity>
-    </View>
+    <ImageBackground source={image} resizeMode="cover" style={styles.image}>
+      <View style={styles.overlayContent}>
+        <Text style={styles.text}>Prepare to chat</Text>
+        <TextInput
+          style={styles.textInput}
+          value={name}
+          onChangeText={setName}
+          placeholder='Type your username here'
+        />
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Chat', { name: name })}>
+          <Text style={styles.buttonText}>Chat Now</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
+  image: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlayContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  buttonText: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    padding: 10,
+  text: {
+    color: 'white',
+    fontSize: 30,
+    fontWeight: 'bold',
   },
-  button: {
+  textInput: {
+    width: "88%",
+    padding: 15,
+    borderWidth: 1,
+    marginTop: 15,
+    marginBottom: 15,
+    backgroundColor: 'white',
+  },
+ button: {
+    width: 50,
+    height: 50,
     backgroundColor: 'blue',
-    borderRadius: 10, // Add this line
-    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 50 / 2,
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
   },
 });
 
-export { Start, Chat };
+export default Start;
