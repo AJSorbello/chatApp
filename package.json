@@ -9,6 +9,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-firebase/auth": "^19.2.0",
+    "@react-native-firebase/firestore": "^19.2.0",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
     "@react-navigation/routers": "^6.1.9",
