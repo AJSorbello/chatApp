@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     fontWeight: '300', // adjust the font weight
     borderWidth: 1,
     marginTop: 15,
-    marginBottom: 15,
+    marginBottom: 5,
     backgroundColor: 'white',
   },
  button: {
