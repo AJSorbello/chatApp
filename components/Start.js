@@ -1,10 +1,12 @@
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import React, { useState } from 'react';
-import { ImageBackground, StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { ImageBackground, StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 
 const Start = ({ navigation }) => {
   const [name, setName] = useState('');
-
+  const auth = getAuth();
   const image = require('../assets/metalBG.png');
+  const[background, setBackground] = useState("");
 
   const ColorButton = ({ color }) => (
     <TouchableOpacity
@@ -12,6 +14,17 @@ const Start = ({ navigation }) => {
       onPress={() => console.log(`Color ${color} selected`)} // replace with your own function
     />
   );
+
+  const signinUser = () => {
+    signInAnonymously(auth)
+      .then((result) => {
+        navigation.navigate('Chat', {name: name, background: background, userID: result.user.uid, });
+        Alert.alert('Logged in');
+      })
+      .catch((error) => {
+        Alert.alert("Unable to sign in, try later again.");
+      })
+  }
 
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.image}>
@@ -24,22 +37,22 @@ const Start = ({ navigation }) => {
           placeholder='Your name'
           placeholderTextColor='rgba(117, 112, 131, 0.5)' // #757083 with 50% opacity
         />
-        <Text style={styles.chooseColorText}>Choose background color</Text>
+      <Text style={styles.chooseColorText}>Choose background color</Text>
         <View style={styles.colorOptions}>
-          <ColorButton color="#090C08" />
-          <ColorButton color="#474056" />
-          <ColorButton color="#8A95A5" />
-          <ColorButton color="#B9C6AE" />
+          <ColorButton color="#090C08" onPress={() => setBackground("#090C08")} />
+          <ColorButton color="#474056" onPress={() => setBackground("#474056")} />
+          <ColorButton color="#8A95A5" onPress={() => setBackground("#8A95A5")} />
+          <ColorButton color="#B9C6AE" onPress={() => setBackground("#B9C6AE")} />
         </View>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Chat', { name: name })}>
+          onPress={signinUser}>
           <Text style={styles.buttonText}>Chat Now</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
   );
-}
+};
 
 const styles = StyleSheet.create({
   image: {

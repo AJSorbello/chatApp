@@ -1,35 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ImageBackground, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble, Day, SystemMessage } from "react-native-gifted-chat";
+import { addDoc, collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 
-const Chat = () => {
+const Chat = ({ route, db }) => { // add route prop here
   const [messages, setMessages] = useState([]);
   const image = require('../assets/metalBG.png'); // replace with the path to your image
 
   const onSend = (newMessages) => {
-    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
+    const message = {
+      ...newMessages[0],
+      user: {
+        _id: route.params.userId, // use the userId from route params
+        name: route.params.name, // use the name from route params
+      },
+    };
+    addDoc(collection(db, "messages"), message);
   }
 
   useEffect(() => {
-    setMessages([
-      {
-        _id: 1,
-        text: "Hello developer",
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: "React Native",
-          avatar: "https://placeimg.com/140/140/any",
-        },
-      },
-      {
-        _id: 2,
-        text: 'This is a system message',
-        createdAt: new Date(),
-        system: true,
+    const messagesCollection = collection(db, "messages");
+    const q = query(messagesCollection, orderBy("createdAt", "desc"));
 
-      },
-    ]);
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const messages = querySnapshot.docs.map(doc => {
+        const firebaseData = doc.data();
+
+        const data = {
+          _id: doc.id,
+          text: firebaseData.text,
+          createdAt: new Date(firebaseData.createdAt.seconds * 1000), // convert to JS date object
+          user: firebaseData.user,
+        };
+
+        return data;
+      });
+
+      setMessages(messages);
+    });
+
+    return unsubscribe; // cleanup function
   }, []);
 
   const renderBubble = (props) => {
@@ -45,17 +55,17 @@ const Chat = () => {
       }}
     />
   }
-const renderDay = (props) => {
-  return <Day {...props} textStyle={{color: 'white'}}/>
-};
 
-const renderSystemMessage = (props) => {
-  return <SystemMessage {...props} textStyle={{color: 'white'}}/>
-};
+  const renderDay = (props) => {
+    return <Day {...props} textStyle={{color: 'white'}}/>
+  };
+
+  const renderSystemMessage = (props) => {
+    return <SystemMessage {...props} textStyle={{color: 'white'}}/>
+  };
 
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.image}>
-   
       <View style={styles.container}>
         <GiftedChat
           messages={messages}
@@ -68,7 +78,8 @@ const renderSystemMessage = (props) => {
           renderSystemMessage={renderSystemMessage}
           onSend={messages => onSend(messages)}
           user={{
-            _id: 1
+            _id: route.params.userId, // use the userId from route params
+            name: route.params.name, // use the name from route params
           }}
         />
       </View>
