@@ -3,18 +3,18 @@ import { StyleSheet, View, ImageBackground, Platform, KeyboardAvoidingView } fro
 import { GiftedChat, Bubble, Day, SystemMessage } from "react-native-gifted-chat";
 import { addDoc, collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 
-const Chat = ({ route, db }) => { // add route prop here
+const Chat = ({ route, db }) => {
   const [messages, setMessages] = useState([]);
-  const image = require('../assets/metalBG.png'); // replace with the path to your image
-
+  const image = require('../assets/metalBG.png');
+  const { background, userId, name } = route.params; // extract userId and name from route params
   const onSend = (newMessages) => {
-    const message = {
-      ...newMessages[0],
-      user: {
-        _id: route.params.userId, // use the userId from route params
-        name: route.params.name, // use the name from route params
-      },
-    };
+   const message = {
+  ...newMessages[0],
+  user: {
+    _id: userId, // use the userId variable
+    name: route.params.name, // use the name from route params
+  },
+};
     addDoc(collection(db, "messages"), message);
   }
 
@@ -29,7 +29,7 @@ const Chat = ({ route, db }) => { // add route prop here
         const data = {
           _id: doc.id,
           text: firebaseData.text,
-          createdAt: new Date(firebaseData.createdAt.seconds * 1000), // convert to JS date object
+          createdAt: new Date(firebaseData.createdAt.seconds * 1000),
           user: firebaseData.user,
         };
 
@@ -39,7 +39,7 @@ const Chat = ({ route, db }) => { // add route prop here
       setMessages(messages);
     });
 
-    return unsubscribe; // cleanup function
+    return unsubscribe;
   }, []);
 
   const renderBubble = (props) => {
@@ -65,7 +65,10 @@ const Chat = ({ route, db }) => { // add route prop here
   };
 
   return (
-    <ImageBackground source={image} resizeMode="cover" style={styles.image}>
+    <ImageBackground
+      source={background ? null : image}
+      resizeMode="cover"
+      style={[styles.image, {backgroundColor: background}]}>
       <View style={styles.container}>
         <GiftedChat
           messages={messages}
@@ -78,9 +81,9 @@ const Chat = ({ route, db }) => { // add route prop here
           renderSystemMessage={renderSystemMessage}
           onSend={messages => onSend(messages)}
           user={{
-            _id: route.params.userId, // use the userId from route params
-            name: route.params.name, // use the name from route params
-          }}
+  _id: userId, // use the userId variable
+  name: route.params.name, // use the name from route params
+}}
         />
       </View>
     </ImageBackground>
@@ -98,7 +101,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   textContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)', // semi-transparent white
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 10,
     borderRadius: 5,
   }
