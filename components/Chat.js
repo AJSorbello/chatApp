@@ -1,22 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, ImageBackground, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble, Day, SystemMessage } from "react-native-gifted-chat";
 import { addDoc, collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { initializeApp } from "firebase/app";
+import { getApps } from 'firebase/app';
 
 const Chat = ({ route, db }) => {
   const [messages, setMessages] = useState([]);
   const image = require('../assets/metalBG.png');
-  const { background, userId, name } = route.params; // extract userId and name from route params
-  const onSend = (newMessages) => {
-   const message = {
-  ...newMessages[0],
-  user: {
-    _id: userId, // use the userId variable
-    name: route.params.name, // use the name from route params
-  },
-};
-    addDoc(collection(db, "messages"), message);
-  }
+  const { background, userId, name, color } = route.params; // extract userId, name, and color from route params
+
+  const [messageCount, setMessageCount] = useState(0);
+
+ const onSend = useCallback((messages = []) => {
+  setMessages(previousMessages => GiftedChat.append(previousMessages, messages));
+  
+  setMessageCount(prevCount => {
+    const newCount = prevCount + 1; // increment the message count
+
+    // if the user has sent 3 messages, send an automatic response
+    if (newCount % 3 === 0) {
+      setMessages(previousMessages => GiftedChat.append(previousMessages, {
+        _id: Math.round(Math.random() * 1000000),
+        text: 'Hang on one sec',
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'Auto Responder',
+        },
+      }));
+    }
+
+    return newCount;
+  });
+}, []);
 
   useEffect(() => {
     const messagesCollection = collection(db, "messages");
@@ -31,6 +48,7 @@ const Chat = ({ route, db }) => {
           text: firebaseData.text,
           createdAt: new Date(firebaseData.createdAt.seconds * 1000),
           user: firebaseData.user,
+          color: firebaseData.color, // add this line
         };
 
         return data;
@@ -42,19 +60,26 @@ const Chat = ({ route, db }) => {
     return unsubscribe;
   }, []);
 
-  const renderBubble = (props) => {
-    return <Bubble
+const renderBubble = (props) => {
+  return (
+    <Bubble
       {...props}
+      textStyle={{
+        right: {
+          color: '#000', // make the text color of the right bubble black
+        },
+      }}
       wrapperStyle={{
         right: {
-          backgroundColor: "#000"
+          backgroundColor: '#FFF', // make the background color of the right bubble white
         },
         left: {
-          backgroundColor: "#FFF"
+          backgroundColor: '#FFF'
         }
       }}
     />
-  }
+  );
+};
 
   const renderDay = (props) => {
     return <Day {...props} textStyle={{color: 'white'}}/>
@@ -68,7 +93,7 @@ const Chat = ({ route, db }) => {
     <ImageBackground
       source={background ? null : image}
       resizeMode="cover"
-      style={[styles.image, {backgroundColor: background}]}>
+      style={[styles.image, {backgroundColor: color}]}>
       <View style={styles.container}>
         <GiftedChat
           messages={messages}
@@ -81,9 +106,9 @@ const Chat = ({ route, db }) => {
           renderSystemMessage={renderSystemMessage}
           onSend={messages => onSend(messages)}
           user={{
-  _id: userId, // use the userId variable
-  name: route.params.name, // use the name from route params
-}}
+            _id: userId, // use the userId variable
+            name: name, // use the name variable
+          }}
         />
       </View>
     </ImageBackground>

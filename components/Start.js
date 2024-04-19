@@ -1,49 +1,52 @@
 import { getAuth, signInAnonymously } from "firebase/auth";
 import React, { useState } from "react";
 import {
-  ImageBackground,
   StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
   Alert,
+  ImageBackground,
 } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import metalBG from '../assets/metalBG.png'; // adjust the path according to your project structure
 
 const Start = ({ navigation }) => {
   const [name, setName] = useState("");
-  const auth = getAuth();
-  const image = require("../assets/metalBG.png");
-  const [background, setBackground] = useState("");
+  const [background, setBackground] = useState(null);
 
-  const ColorButton = ({ color }) => (
-    <TouchableOpacity
-      style={[styles.colorButton, { backgroundColor: color }]}
-      onPress={() => setBackground(color)}
-    />
+  const ColorButton = ({ colors }) => (
+    <TouchableOpacity onPress={() => setBackground(colors)}>
+      <View style={{backgroundColor: colors[0], width: 50, height: 50, borderRadius: 25}} />
+    </TouchableOpacity>
   );
-
 const signinUser = () => {
+  const auth = getAuth();
   signInAnonymously(auth)
-    .then((result) => {
+    .then((userCredential) => {
+      // Signed in..
+      const user = userCredential.user;
+      const color = background ? background[0] : '#757083'; // extract the color from the background array
       navigation.navigate("Chat", {
         name: name,
         background: background,
-        userId: result.user.uid, // Corrected here
+        userId: user.uid,
+        color: color, // pass the color as a parameter
       });
-      Alert.alert("Logged in");
     })
     .catch((error) => {
-      Alert.alert("Unable to sign in, try later again.");
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // ...
+      console.log("Error code: ", errorCode);
+      console.log("Error message: ", errorMessage);
     });
 };
 
   return (
-    <ImageBackground
-      source={background ? null : image}
-      resizeMode="cover"
-      style={[styles.image, {backgroundColor: background}]}>
-      <View style={styles.overlayContent}>
+    <ImageBackground source={metalBG} style={styles.container}>
+      <LinearGradient colors={background || ['transparent', 'transparent']} style={styles.overlayContent}>
         <Text style={styles.text}>Prepare to chat</Text>
         <TextInput
           style={styles.textInput}
@@ -52,49 +55,69 @@ const signinUser = () => {
           placeholder="Your name"
           placeholderTextColor="rgba(117, 112, 131, 0.5)" // #757083 with 50% opacity
         />
-        <View style={styles.transparentBox}>
-          <Text style={styles.chooseColorText}>Choose background color</Text>
-
-          <View style={styles.colorOptions}>
-            <ColorButton color="#090C08" />
-            <ColorButton color="#474056" />
-            <ColorButton color="#8A95A5" />
-            <ColorButton color="#B9C6AE" />
-          </View>
-        </View>
         <TouchableOpacity style={styles.button} onPress={signinUser}>
           <Text style={styles.buttonText}>Chat Now</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.resetButton}
-          onPress={() => setBackground(null)}>
-          <Text style={styles.resetButtonText}>Reset Background</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.transparentBox}>
+          <Text style={styles.chooseColorText}>Choose background color</Text>
+          <View style={styles.colorOptions}>
+            <ColorButton colors={['#090C08', '#474056']} />
+            <ColorButton colors={['#474056', '#8A95A5']} />
+            <ColorButton colors={['#8A95A5', '#B9C6AE']} />
+            <ColorButton colors={['#B9C6AE', '#090C08']} />
+          </View>
+          <TouchableOpacity
+            style={styles.resetButton}
+            onPress={() => setBackground(null)}>
+            <Text style={styles.resetButtonText}>Reset Background</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
     </ImageBackground>
   );
 };
-
 const styles = StyleSheet.create({
-  image: {
+  container: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  transparentBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.3)", // semi-transparent white
-    padding: 10,
-    borderRadius: 5,
+    justifyContent: 'center',
   },
   overlayContent: {
     flex: 1,
-    justifyContent: "space-around", // distribute items evenly along the vertical axis
-    alignItems: "center", // center items along the horizontal axis
+    justifyContent: "space-around",
+  },
+  text: {
+    color: "#FFFFFF",
+    fontSize: 45,
+    fontWeight: "600",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    textAlign: 'center',
+  },
+  textInput: {
+    width: "88%",
+    padding: 15,
+    fontSize: 16,
+    fontWeight: "300",
+    borderWidth: 1,
+    marginTop: 15,
+    marginBottom: 5,
+    backgroundColor: "white",
+    alignSelf: 'center',
+  },
+  transparentBox: {
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    padding: 10,
+    borderRadius: 5,
+    width:'100%',
+    alignSelf: 'center',
   },
   chooseColorText: {
-    fontSize: 16, // adjust the font size
-    fontWeight: "300", // adjust the font weight
-    color: "#000000", // adjust the font color
+    fontSize: 16,
+    fontWeight: "300",
+    color: "#000000",
+    textAlign: 'center',
   },
   colorOptions: {
     flexDirection: "row",
@@ -102,30 +125,12 @@ const styles = StyleSheet.create({
     width: "60%",
     marginTop: 10,
     marginBottom: 10,
+    alignSelf: 'center',
   },
   colorButton: {
     width: 50,
     height: 50,
-    borderRadius: 25, // make the button circular
-  },
- text: {
-  color: "#FFFFFF", // white color
-  fontSize: 45, // larger font size
-  fontWeight: "600", // semi-bold font weight
-  shadowColor: "#000", // black shadow
-  shadowOffset: { width: 0, height: 1 }, // shadow position
-  shadowOpacity: 0.5, // shadow opacity
-  shadowRadius: 3, // shadow blur radius
-},
-  textInput: {
-    width: "88%",
-    padding: 15,
-    fontSize: 16, // adjust the font size
-    fontWeight: "300", // adjust the font weight
-    borderWidth: 1,
-    marginTop: 15,
-    marginBottom: 5,
-    backgroundColor: "white",
+    borderRadius: 25,
   },
   button: {
     width: 80,
@@ -134,6 +139,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 5,
+    alignSelf: 'center',
   },
   buttonText: {
     color: "white",
@@ -141,14 +147,15 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     padding: 10,
-    backgroundColor: '#757083', // adjust the background color
-    borderRadius: 5, // adjust the border radius
-    marginTop: 10, // adjust the margin
+    backgroundColor: '#757083',
+    borderRadius: 5,
+    marginTop: 10,
+    alignSelf: 'center',
   },
   resetButtonText: {
-    color: '#FFFFFF', // white color
-    fontSize: 16, // adjust the font size
-    textAlign: 'center', // center the text
+    color: '#FFFFFF',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 
