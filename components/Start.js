@@ -28,12 +28,7 @@ const signinUser = () => {
       // Signed in..
       const user = userCredential.user;
       const color = background ? background[0] : '#757083'; // extract the color from the background array
-      navigation.navigate("Chat", {
-        name: name,
-        background: background,
-        userId: user.uid,
-        color: color, // pass the color as a parameter
-      });
+      navigation.navigate('Chat', { color: color, background: metalBG });
     })
     .catch((error) => {
       const errorCode = error.code;

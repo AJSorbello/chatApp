@@ -4,11 +4,31 @@ import { GiftedChat, Bubble, Day, SystemMessage } from "react-native-gifted-chat
 import { addDoc, collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import { getApps } from 'firebase/app';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const Chat = ({ route, db }) => {
+const image = require('../assets/metalBG.png'); // make sure this path is correct
+
+const Chat = ({ route, db, navigation }) => { 
   const [messages, setMessages] = useState([]);
-  const image = require('../assets/metalBG.png');
-  const { background, userId, name, color } = route.params; // extract userId, name, and color from route params
+const { background, userId, name, color = '#757083' } = route.params;
+
+  const styles = StyleSheet.create({
+    image: {
+      flex: 1,
+      width: '100%',
+      height: '100%',
+    },
+    container: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    
+    },
+    textContainer: {
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      padding: 10,
+      borderRadius: 5,
+    }
+  });
 
   const [messageCount, setMessageCount] = useState(0);
 
@@ -36,6 +56,8 @@ const Chat = ({ route, db }) => {
 }, []);
 
   useEffect(() => {
+    navigation.setOptions({
+      title:name });
     const messagesCollection = collection(db, "messages");
     const q = query(messagesCollection, orderBy("createdAt", "desc"));
 
@@ -59,6 +81,7 @@ const Chat = ({ route, db }) => {
 
     return unsubscribe;
   }, []);
+
 
 const renderBubble = (props) => {
   return (
@@ -84,52 +107,38 @@ const renderBubble = (props) => {
   const renderDay = (props) => {
     return <Day {...props} textStyle={{color: 'white'}}/>
   };
+const renderSystemMessage = (props) => {
+  return <SystemMessage {...props} textStyle={{color: 'white'}}/>
+};
 
-  const renderSystemMessage = (props) => {
-    return <SystemMessage {...props} textStyle={{color: 'white'}}/>
-  };
-
-  return (
-    <ImageBackground
-      source={background ? null : image}
-      resizeMode="cover"
-      style={[styles.image, {backgroundColor: color}]}>
-      <View style={styles.container}>
-        <GiftedChat
-          messages={messages}
-          renderBubble={renderBubble}
-          renderDay={renderDay}
-          accessible={true}
-          accessibilityLabel="Chat"
-          accessibilityHint="Start a new chat"
-          accessibilityRole="button"
-          renderSystemMessage={renderSystemMessage}
-          onSend={messages => onSend(messages)}
-          user={{
-            _id: userId, // use the userId variable
-            name: name, // use the name variable
-          }}
-        />
-      </View>
-    </ImageBackground>
-  );
-}
-
-const styles = StyleSheet.create({
-  image: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  textContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    padding: 10,
-    borderRadius: 5,
-  }
-});
+ return color !== '#757083' ? (
+  <LinearGradient
+    colors={[color, color]}
+    style={styles.container}
+  >
+    <View style={styles.container}>
+      <GiftedChat
+        messages={messages}
+        renderBubble={renderBubble}
+        // ...
+      />
+    </View>
+  </LinearGradient>
+) : (
+  <ImageBackground
+    source={image}
+    resizeMode="cover"
+    style={styles.container}
+  >
+    <View style={styles.container}>
+      <GiftedChat
+        messages={messages}
+        renderBubble={renderBubble}
+        // ...
+      />
+    </View>
+  </ImageBackground>
+);
+};
 
 export default Chat;

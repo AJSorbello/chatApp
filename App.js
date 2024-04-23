@@ -22,6 +22,8 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   const [db, setDb] = useState(null);
+  const App = () => {
+  const connectionStatus = useNetInfo();
 
   useEffect(() => {
     console.log('API_KEY:', API_KEY); // Add console logs to check the values of your environment variables
