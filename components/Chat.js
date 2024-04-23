@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, ImageBackground, Platform, KeyboardAvoidingView } from 'react-native';
-import { GiftedChat, Bubble, Day, SystemMessage } from "react-native-gifted-chat";
+import { GiftedChat, Bubble, Day, SystemMessage, InputToolbar } from "react-native-gifted-chat";
 import { addDoc, collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import { getApps } from 'firebase/app';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const image = require('../assets/metalBG.png'); // make sure this path is correct
 
-const Chat = ({ route, db, navigation }) => { 
+const Chat = ({ route, db, navigation, isConnected }) => { 
   const [messages, setMessages] = useState([]);
 const { background, userId, name, color = '#757083' } = route.params;
 
@@ -55,32 +56,43 @@ const { background, userId, name, color = '#757083' } = route.params;
   });
 }, []);
 
-  useEffect(() => {
-    navigation.setOptions({
-      title:name });
-    const messagesCollection = collection(db, "messages");
-    const q = query(messagesCollection, orderBy("createdAt", "desc"));
+   useEffect(() => {
+    navigation.setOptions({ title:name });
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const messages = querySnapshot.docs.map(doc => {
-        const firebaseData = doc.data();
+    if (isConnected) {
+      const messagesCollection = collection(db, "messages");
+      const q = query(messagesCollection, orderBy("createdAt", "desc"));
 
-        const data = {
-          _id: doc.id,
-          text: firebaseData.text,
-          createdAt: new Date(firebaseData.createdAt.seconds * 1000),
-          user: firebaseData.user,
-          color: firebaseData.color, // add this line
-        };
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const messages = querySnapshot.docs.map(doc => {
+          const firebaseData = doc.data();
 
-        return data;
+          const data = {
+            _id: doc.id,
+            text: firebaseData.text,
+            createdAt: new Date(firebaseData.createdAt.seconds * 1000),
+            user: firebaseData.user,
+            color: firebaseData.color,
+          };
+
+          return data;
+        });
+
+        setMessages(messages);
+        AsyncStorage.setItem('messages', JSON.stringify(messages)); // cache messages
       });
 
-      setMessages(messages);
-    });
-
-    return unsubscribe;
-  }, []);
+      return unsubscribe;
+    } else {
+      // load cached messages from local storage
+      AsyncStorage.getItem('messages')
+        .then(data => {
+          if (data !== null) {
+            setMessages(JSON.parse(data));
+          }
+        });
+    }
+  }, [isConnected]);
 
 
 const renderBubble = (props) => {
@@ -110,6 +122,10 @@ const renderBubble = (props) => {
 const renderSystemMessage = (props) => {
   return <SystemMessage {...props} textStyle={{color: 'white'}}/>
 };
+  const renderInputToolbar = (props) => {
+    if (isConnected) return <InputToolbar {...props} />;
+    else return null;
+  };
 
  return color !== '#757083' ? (
   <LinearGradient
@@ -120,6 +136,8 @@ const renderSystemMessage = (props) => {
       <GiftedChat
         messages={messages}
         renderBubble={renderBubble}
+         renderInputToolbar={renderInputToolbar}
+
         // ...
       />
     </View>
@@ -131,9 +149,11 @@ const renderSystemMessage = (props) => {
     style={styles.container}
   >
     <View style={styles.container}>
-      <GiftedChat
-        messages={messages}
-        renderBubble={renderBubble}
+     <GiftedChat
+  messages={messages}
+  onSend={messages => onSend(messages)}
+  renderBubble={renderBubble}
+  renderInputToolbar={renderInputToolbar}
         // ...
       />
     </View>
