@@ -17,10 +17,13 @@ import {
 } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
+
 
 const image = require("../assets/metalBG.png"); // make sure this path is correct
 
-const Chat = ({ route, db, navigation, isConnected }) => {
+const Chat = ({ route, db, navigation, isConnected, storage }) => {
   const [messages, setMessages] = useState([]);
   const { background, userId, name, color = "#757083" } = route.params;
 
@@ -114,7 +117,6 @@ const Chat = ({ route, db, navigation, isConnected }) => {
       });
     }
   }, [isConnected]);
-
   const renderBubble = (props) => {
     return (
       <Bubble
@@ -146,6 +148,30 @@ const Chat = ({ route, db, navigation, isConnected }) => {
     return null;
   }
 };
+const renderCustomActions = (props) => {
+  return <CustomActions storage={storage} {...props} />;
+};
+
+    const renderCustomView = (props) => {
+    const { currentMessage} = props;
+    if (currentMessage.location) {
+      return (
+          <MapView
+            style={{width: 150,
+              height: 100,
+              borderRadius: 13,
+              margin: 3}}
+            region={{
+              latitude: currentMessage.location.latitude,
+              longitude: currentMessage.location.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          />
+      );
+    }
+    return null;
+  }
 
   return color !== "#757083" ? (
     <LinearGradient colors={[color, color]} style={styles.container}>
@@ -156,6 +182,12 @@ const Chat = ({ route, db, navigation, isConnected }) => {
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           renderDay={renderDay}
+          renderCustomView={renderCustomView}
+           renderActions={renderCustomActions}
+        user={{
+          _id: userID,
+          name
+        }}
           accessibilityLabel="chat message"
           accessibilityHint="chat message"
           accessibilityRole="text"
@@ -168,15 +200,21 @@ const Chat = ({ route, db, navigation, isConnected }) => {
     <ImageBackground source={image} resizeMode="cover" style={styles.container}>
       <View style={styles.container}>
         <GiftedChat
-          messages={messages}
-          onSend={(messages) => onSend(messages)}
-          renderBubble={renderBubble}
-          renderInputToolbar={renderInputToolbar}
-          renderDay={renderDay}
-          accessibilityLabel="chat message"
-          accessibilityHint="chat message"
-          accessibilityRole="text"
-        />
+  messages={messages}
+  onSend={(messages) => onSend(messages)}
+  renderBubble={renderBubble}
+  renderInputToolbar={renderInputToolbar}
+  renderDay={renderDay}
+  renderActions={renderCustomActions}
+  renderCustomView={renderCustomView}
+  user={{
+    _id: userId, // use 'userId' instead of 'userID'
+    name: route.params.name,
+  }}
+  accessibilityLabel="chat message"
+  accessibilityHint="chat message"
+  accessibilityRole="text"
+/>
       </View>
     </ImageBackground>
   );

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { initializeApp } from 'firebase/app';
+import { getApps, initializeApp } from 'firebase/app';
 import { getFirestore, disableNetwork, enableNetwork } from 'firebase/firestore';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,8 +10,9 @@ import Chat from './components/Chat';
 import { API_KEY, AUTH_DOMAIN, PROJECT_ID, STORAGE_BUCKET, MESSAGING_SENDER_ID, APP_ID } from '@env';
 import { LogBox, Alert } from "react-native";
 import { useNetInfo } from "@react-native-community/netinfo";
-
 LogBox.ignoreLogs(["AsyncStorage has been extracted from"]);
+import { getStorage } from "firebase/storage";
+
 
 const firebaseConfig = {
   apiKey: API_KEY,
@@ -27,26 +28,33 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   const [db, setDb] = useState(null);
+    const [storage, setStorage] = useState(null); // Add this line
   const connectionStatus = useNetInfo();
 
   useEffect(() => {
+     if (db) {
     if (connectionStatus.isConnected === false) {
       Alert.alert("Connection Lost!");
       disableNetwork(db);
     } else if (connectionStatus.isConnected === true) {
       enableNetwork(db);
     }
-  }, [connectionStatus.isConnected]);
+  }
+  }, [connectionStatus.isConnected, db]);
 
-  useEffect(() => {
-    const app = initializeApp(firebaseConfig);
-    const firestoreDb = getFirestore(app);
-    setDb(firestoreDb);
+ useEffect(() => {
+    if (!getApps().length) {
+      const app = initializeApp(firebaseConfig);
+      const firestoreDb = getFirestore(app);
+      const firebaseStorage = getStorage(app);
+      setDb(firestoreDb);
+      setStorage(firebaseStorage); // Add this line
 
     // Initialize Firebase Auth with AsyncStorage
     const auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });
+  }
   }, []);
 
   if (!db) {
@@ -57,9 +65,16 @@ const App = () => {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Start">
         <Stack.Screen name="Home" component={Start} />
- <Stack.Screen name="Chat">
-  {props => <Chat {...props} db={db} isConnected={connectionStatus.isConnected} />}
-</Stack.Screen>
+  <Stack.Screen
+          name="Chat"
+        >
+          {props => <Chat
+            isConnected={connectionStatus.isConnected}
+            db={db}
+            storage={storage}
+            {...props}
+          />}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
