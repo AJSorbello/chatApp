@@ -62,33 +62,26 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     let permissions = await ImagePicker.requestCameraPermissionsAsync();
     if (permissions?.granted) {
       let result = await ImagePicker.launchCameraAsync();
-      if (!result.cancelled) await uploadAndSendImage(result.assets[0].uri);
+      if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
       else Alert.alert("Permissions haven't been granted.");
     }
   };
 
   const getLocation = async () => {
     let permissions = await Location.requestForegroundPermissionsAsync();
-    if (permissions.status === 'granted') {
-      try {
-        const location = await Location.getCurrentPositionAsync({});
-        if (location) {
-          onSend({
-            location: {
-              longitude: location.coords.longitude,
-              latitude: location.coords.latitude,
-            },
-          });
-        } else {
-          Alert.alert("Error occurred while fetching location");
-        }
-      } catch (error) {
-      }
-    } else {
-      Alert.alert("Permissions haven't been granted.");
-    }
+    if (permissions?.granted) {
+      const location = await Location.getCurrentPositionAsync({});
+      if (location) {
+        //call onSend()
+        onSend({
+          location: {
+            longitude: location.coords.longitude,
+            latitude: location.coords.latitude,
+          },
+        });
+      } else Alert.alert('Error occurred while fetching location');
+    } else Alert.alert("Permissions haven't been granted.");
   };
-
   const onActionPress = () => {
     const options = [
       "Choose From Library",

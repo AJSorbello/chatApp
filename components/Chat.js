@@ -175,51 +175,32 @@ const renderCustomActions = (props) => {
   return null;
 };
 
-  return color !== "#757083" ? (
-    <LinearGradient colors={[color, color]} style={styles.container}>
-      <View style={styles.container}>
-        <GiftedChat
-          messages={messages}
-          onSend={(messages) => onSend(messages)}
-          renderBubble={renderBubble}
-          renderInputToolbar={renderInputToolbar}
-          renderDay={renderDay}
-          renderCustomView={renderCustomView}
-           renderActions={renderCustomActions}
-        user={{
-          _id: userID,
-          name
-        }}
-          accessibilityLabel="chat message"
-          accessibilityHint="chat message"
-          accessibilityRole="text"
+ const Background = color !== "#757083" ? LinearGradient : ImageBackground;
+const backgroundProps = color !== "#757083" ? { colors: [color, color] } : { source: image, resizeMode: "cover" };
 
-          // ...
-        />
-      </View>
-    </LinearGradient>
-  ) : (
-    <ImageBackground source={image} resizeMode="cover" style={styles.container}>
-      <View style={styles.container}>
-        <GiftedChat
-  messages={messages}
-  onSend={(messages) => onSend(messages)}
-  renderBubble={renderBubble}
-  renderInputToolbar={renderInputToolbar}
-  renderDay={renderDay}
-  renderActions={renderCustomActions}
-  renderCustomView={renderCustomView}
-  user={{
-    _id: userId, // use 'userId' instead of 'userID'
-    name: route.params.name,
-  }}
-  accessibilityLabel="chat message"
-  accessibilityHint="chat message"
-  accessibilityRole="text"
-/>
-      </View>
-    </ImageBackground>
-  );
+const user = {
+  _id: userId,
+  name: route.params.name,
 };
 
+return (
+  <Background {...backgroundProps} style={styles.container}>
+    <View style={styles.container}>
+      <GiftedChat
+        messages={messages}
+        onSend={(messages) => onSend(messages)}
+        renderBubble={renderBubble}
+        renderInputToolbar={renderInputToolbar}
+        renderDay={renderDay}
+        renderActions={renderCustomActions}
+        renderCustomView={renderCustomView}
+        user={user}
+        accessibilityLabel="chat message"
+        accessibilityHint="chat message"
+        accessibilityRole="text"
+      />
+    </View>
+  </Background>
+);
+};
 export default Chat;
