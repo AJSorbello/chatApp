@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text, View, StyleSheet, Alert } from "react-native";
+import { TouchableOpacity, Text, View, StyleSheet, Alert, Linking } from "react-native";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
@@ -8,45 +8,86 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
   const actionSheet = useActionSheet();
 
-  const getLocation = async () => {
-    let permissions = await Location.requestForegroundPermissionsAsync();
-    if (permissions?.granted) {
-      const location = await Location.getCurrentPositionAsync({});
-      if (location) {
-        onSend({
-          location: {
-            longitude: location.coords.longitude,
-            latitude: location.coords.latitude,
-          },
-        });
-      } else Alert.alert("Error occurred while fetching location");
-    } else Alert.alert("Permissions haven't been granted.");
-  };
-
   const generateReference = (uri) => {
     const timeStamp = (new Date()).getTime();
     const imageName = uri.split("/")[uri.split("/").length - 1];
     return `${userID}-${timeStamp}-${imageName}`;
   }
 
+  const uploadAndSendImage = async (imageURI) => {
+    const uniqueRefString = generateReference(imageURI);
+    const newUploadRef = ref(storage, uniqueRefString);
+    const response = await fetch(imageURI);
+    const blob = await response.blob();
+    uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+      const imageURL = await getDownloadURL(snapshot.ref)
+      onSend({ image: imageURL })
+    });
+  }
+
   const pickImage = async () => {
     let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    console.log('Permissions:', permissions);
+
     if (permissions?.granted) {
       let result = await ImagePicker.launchImageLibraryAsync();
+      console.log('Image Picker Result:', result);
+
       if (!result.cancelled) {
-        const imageURI = result.assets[0].uri;
-        const uniqueRefString = generateReference(imageURI);
-        const response = await fetch(imageURI);
-        const blob = await response.blob();
-        const newUploadRef = ref(storage, uniqueRefString);
-        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
-          console.log('file has been uploaded');
-          const imageURL = await getDownloadURL(snapshot.ref);
-          onSend({ image: imageURL });
-        });
-      } else Alert.alert("Error occurred while fetching image");
-    } else Alert.alert("Permissions haven't been granted.");
+        await uploadAndSendImage(result.assets[0].uri);
+      }
+    } else {
+      if (!permissions.canAskAgain) {
+        Alert.alert(
+          "Permission required",
+          "This app needs the media library access to pick an image. Please go to settings and grant the permission.",
+          [
+            {
+              text: "Open Settings",
+              onPress: () => Linking.openSettings(),
+            },
+            {
+              text: "Cancel",
+              onPress: () => console.log("Permission denied"),
+              style: "cancel",
+            },
+          ]
+        );
+      } else {
+        Alert.alert("Permissions haven't been granted.");
+      }
+    }
   }
+  const takePhoto = async () => {
+    let permissions = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissions?.granted) {
+      let result = await ImagePicker.launchCameraAsync();
+      if (!result.cancelled) await uploadAndSendImage(result.assets[0].uri);
+      else Alert.alert("Permissions haven't been granted.");
+    }
+  };
+
+  const getLocation = async () => {
+    let permissions = await Location.requestForegroundPermissionsAsync();
+    if (permissions.status === 'granted') {
+      try {
+        const location = await Location.getCurrentPositionAsync({});
+        if (location) {
+          onSend({
+            location: {
+              longitude: location.coords.longitude,
+              latitude: location.coords.latitude,
+            },
+          });
+        } else {
+          Alert.alert("Error occurred while fetching location");
+        }
+      } catch (error) {
+      }
+    } else {
+      Alert.alert("Permissions haven't been granted.");
+    }
+  };
 
   const onActionPress = () => {
     const options = [
@@ -65,6 +106,9 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
         switch (buttonIndex) {
           case 0:
             pickImage();
+            return;
+          case 1:
+            takePhoto();
             return;
           case 2:
             getLocation();
