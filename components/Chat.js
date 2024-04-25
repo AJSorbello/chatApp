@@ -81,6 +81,35 @@ const Chat = ({ route, db, navigation, isConnected, storage }) => {
     });
   }, []);
 
+  const uploadAndSendImage = async (imageURI) => {
+  const uniqueRefString = generateReference(imageURI);
+  const newUploadRef = ref(storage, uniqueRefString);
+  const response = await fetch(imageURI);
+  const blob = await response.blob();
+  uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+    const imageURL = await getDownloadURL(snapshot.ref)
+    onSend({ image: imageURL })
+  });
+}
+
+const pickImage = async () => {
+  let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (permissions?.granted) {
+    let result = await ImagePicker.launchImageLibraryAsync();
+    if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
+    else Alert.alert("Permissions haven't been granted.");
+  }
+}
+
+const takePhoto = async () => {
+  let permissions = await ImagePicker.requestCameraPermissionsAsync();
+  if (permissions?.granted) {
+    let result = await ImagePicker.launchCameraAsync();
+    if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
+    else Alert.alert("Permissions haven't been granted.");
+  }
+}
+
   useEffect(() => {
     navigation.setOptions({ title: name });
 
