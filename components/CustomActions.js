@@ -2,11 +2,12 @@ import { TouchableOpacity, Text, View, StyleSheet, Alert, Linking } from "react-
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
   const actionSheet = useActionSheet();
+  const [location, setLocation] = useState(null);
 
   const generateReference = (uri) => {
     const timeStamp = (new Date()).getTime();
@@ -67,21 +68,44 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     }
   };
 
-  const getLocation = async () => {
-    let permissions = await Location.requestForegroundPermissionsAsync();
-    if (permissions?.granted) {
-      const location = await Location.getCurrentPositionAsync({});
-      if (location) {
-        //call onSend()
-        onSend({
-          location: {
-            longitude: location.coords.longitude,
-            latitude: location.coords.latitude,
-          },
-        });
-      } else Alert.alert('Error occurred while fetching location');
-    } else Alert.alert("Permissions haven't been granted.");
-  };
+ useEffect(() => {
+    prefetchLocation();
+  }, []);
+
+const prefetchLocation = async () => {
+  let permissions = await Location.requestForegroundPermissionsAsync();
+  if (permissions?.granted) {
+    try {
+      const locationWatcher = await Location.watchPositionAsync({}, (location) => {
+        setLocation(location);
+      });
+      return () => locationWatcher.remove();
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error occurred while prefetching location');
+    }
+  } else {
+    Alert.alert('Location permission not granted');
+  }
+};
+
+const getLocation = async () => {
+  try {
+    if (location) {
+      onSend({
+        location: {
+          longitude: location.coords.longitude,
+          latitude: location.coords.latitude,
+        },
+      });
+    } else {
+      throw new Error('Location data is not available');
+    }
+  } catch (error) {
+    console.error(error);
+    Alert.alert('Error occurred while fetching location');
+  }
+};
   const onActionPress = () => {
     const options = [
       "Choose From Library",
