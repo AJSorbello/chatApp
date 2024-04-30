@@ -1,40 +1,27 @@
-# Mobile Chat App README
+# Mobile Chat App
 
-## Who
-The users of the mobile chat app include friends, family, or other students on this course. Additionally, other developers working on the product will utilize the codebase.
+## **Overview**
+The Mobile Chat App is a native chat application designed for various user groups, including friends, family, course students, and developers collaborating on a project. Developed using React Native, the app allows users to communicate in real-time and is accompanied by comprehensive documentation. It is optimized for both Android and iOS devices, built with Expo, and utilizes Google Firestore for message storage. Given the widespread use of mobile chat apps, mastering their development is a valuable skill. This project serves as a demonstration of proficiency in React Native development.
 
-## What
-This is a native chat app built with React Native, accompanied by all relevant documentation.
+## **Features**
+### **User Stories**
+- **New User:** Easily join a chat room to start conversing with friends and family.
+- **Message Exchange:** Send and receive messages to stay updated with contacts.
+- **Image Sharing:** Share images with contacts for visual communication.
+- **Location Sharing:** Share current location with others to indicate whereabouts.
+- **Offline Access:** Read messages offline to revisit conversations anytime.
+- **Accessibility:** Ensure compatibility with screen readers for users with visual impairment.
 
-## When
-Users of the chat app can communicate with each other at any time they desire.
-
-## Where
-The app is optimized for both Android and iOS devices. It is developed using Expo and utilizes Google Firestore to store chat messages.
-
-## Why
-Mobile chat apps are widely used globally, making the skill of building them indispensable. This app demonstrates proficiency in React Native development.
-
-## Features and Requirements
-
-### User Stories
-- As a new user, I want to easily enter a chat room to quickly start conversing with friends and family.
-- As a user, I want to send messages to exchange the latest news with my contacts.
-- As a user, I want to share images with my contacts to visually communicate.
-- As a user, I want to share my location with others to show where I am.
-- As a user, I want to read messages offline to revisit conversations anytime.
-- As a user with visual impairment, I want a chat app compatible with a screen reader for accessibility.
-
-### Key Features
+### **Key Features**
 - Page for users to enter their name and choose a background color before joining the chat.
 - Conversation display page with input field and submit button.
-- Additional communication features: sending images and location data.
-- Location data must be sent via the chat in a map view.
-- Chat interface and functionality must be created using the Gifted Chat library.
+- Ability to send images and location data.
+- Display of location data in a map view within the chat.
+- Chat interface and functionality created using the Gifted Chat library.
 - Online and offline data storage for chat conversations.
 
-### Technical Requirements
-- Built in React Native with Expo.
+### **Technical Requirements**
+- Developed in React Native with Expo.
 - Styled according to provided screen design.
 - Chat conversations stored in Google Firestore Database.
 - User authentication via Google Firebase authentication.
@@ -44,8 +31,8 @@ Mobile chat apps are widely used globally, making the skill of building them ind
 - Images stored in Firebase Cloud Storage.
 - Ability to read user's location data.
 
-## Author
+## **Author**
 AJ Sorbello
 
-## License
+## **License**
 This project is licensed under the AJ Sorbello License.
