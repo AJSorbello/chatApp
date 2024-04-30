@@ -25,61 +25,62 @@ const image = require("../assets/metalBG.png"); // make sure this path is correc
 
 const Chat = ({ route, db, navigation, isConnected, storage }) => {
   const [messages, setMessages] = useState([]);
-  const { background, userId, name, color = "#757083" } = route.params;
-
-  const styles = StyleSheet.create({
-    image: {
-      flex: 1,
-      width: "100%",
-      height: "100%",
-    },
-    container: {
-      flex: 1,
-      justifyContent: "flex-end",
-      paddingBottom: 10,
-    },
-    textContainer: {
-       backgroundColor: "rgba(255, 255, 255, 0.8)",
-      borderRadius: 5,
-      padding: 5, 
-      flex: 1,
-      marginBottom: 20,
-    },
-     inputToolbar: {
-      borderRadius: 20,
-      marginHorizontal: 10,
-
-    },
-  });
+  const {userId, name, color = "#757083" } = route.params;
 
   const [messageCount, setMessageCount] = useState(0);
+const onSend = useCallback(
+  async (newMessages = []) => {
 
-  const onSend = useCallback((messages = []) => {
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
-    );
+    const message = { 
+      ...newMessages[0], 
+      user: { 
+        _id: userId, 
+        name: route.params.name,
+      },
+    };
 
-    setMessageCount((prevCount) => {
-      const newCount = prevCount + 1; // increment the message count
+    if (newMessages[0].image) {
+      message.image = newMessages[0].image;
+    }
+    if (newMessages[0].location) {
+      message.location = newMessages[0].location;
+    }
 
-      // if the user has sent 3 messages, send an automatic response
-      if (newCount % 3 === 0) {
-        setMessages((previousMessages) =>
-          GiftedChat.append(previousMessages, {
-            _id: Math.round(Math.random() * 1000000),
-            text: "Hang on one sec",
-            createdAt: new Date(),
-            user: {
-              _id: 2,
-              name: "Auto Responder",
-            },
-          })
-        );
-      }
+    try {
+      await addDoc(collection(db, "messages"), message);
+      setMessages((previousMessages) =>
+        GiftedChat.append(previousMessages, newMessages)
+        
+      );
+      
 
-      return newCount;
-    });
-  }, []);
+      setMessageCount((prevCount) => {
+        const newCount = prevCount + 1; // increment the message count
+
+        // if the user has sent 3 messages, send an automatic response
+        if (newCount % 3 === 0) {
+          setMessages((previousMessages) =>
+            GiftedChat.append(previousMessages, {
+              _id: Math.round(Math.random() * 1000000),
+              text: "Hang on one sec",
+              createdAt: new Date(),
+              user: {
+                _id: 2,
+                name: "Auto Responder",
+              },
+            })
+          );
+        }
+
+        return newCount;
+      });
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
+  },
+  [userId, route.params.name, db]
+);
+let unsubscribe;
 
   useEffect(() => {
     navigation.setOptions({ title: name });
@@ -88,7 +89,7 @@ const Chat = ({ route, db, navigation, isConnected, storage }) => {
       const messagesCollection = collection(db, "messages");
       const q = query(messagesCollection, orderBy("createdAt", "desc"));
 
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+     unsubscribe = onSnapshot(q, (querySnapshot) => {
         const messages = querySnapshot.docs.map((doc) => {
           const firebaseData = doc.data();
 
@@ -98,16 +99,20 @@ const Chat = ({ route, db, navigation, isConnected, storage }) => {
             createdAt: new Date(firebaseData.createdAt.seconds * 1000),
             user: firebaseData.user,
             color: firebaseData.color,
+            image: firebaseData.image, // add this line
+            location: firebaseData.location,
           };
 
           return data;
         });
-
         setMessages(messages);
         AsyncStorage.setItem("messages", JSON.stringify(messages)); // cache messages
       });
 
-      return unsubscribe;
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+      
     } else {
       // load cached messages from local storage
       AsyncStorage.getItem("messages").then((data) => {
@@ -116,7 +121,8 @@ const Chat = ({ route, db, navigation, isConnected, storage }) => {
         }
       });
     }
-  }, [isConnected]);
+  }, [isConnected, navigation, name, db]);
+
   const renderBubble = (props) => {
     return (
       <Bubble
@@ -203,4 +209,30 @@ return (
   </Background>
 );
 };
+
+ 
+  const styles = StyleSheet.create({
+    image: {
+      flex: 1,
+      width: "100%",
+      height: "100%",
+    },
+    container: {
+      flex: 1,
+      justifyContent: "flex-end",
+      paddingBottom: 10,
+    },
+    textContainer: {
+       backgroundColor: "rgba(255, 255, 255, 0.8)",
+      borderRadius: 5,
+      padding: 5, 
+      flex: 1,
+      marginBottom: 20,
+    },
+     inputToolbar: {
+      borderRadius: 20,
+      marginHorizontal: 10,
+
+    },
+  });
 export default Chat;

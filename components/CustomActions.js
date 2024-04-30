@@ -5,14 +5,14 @@ import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
-const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
+const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userId }) => {
   const actionSheet = useActionSheet();
   const [location, setLocation] = useState(null);
 
   const generateReference = (uri) => {
     const timeStamp = (new Date()).getTime();
     const imageName = uri.split("/")[uri.split("/").length - 1];
-    return `${userID}-${timeStamp}-${imageName}`;
+    return `${userId}-${timeStamp}-${imageName}`;
   }
 
   const uploadAndSendImage = async (imageURI) => {
@@ -34,7 +34,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
       let result = await ImagePicker.launchImageLibraryAsync();
       console.log('Image Picker Result:', result);
 
-      if (!result.cancelled) {
+      if (!result.canceled) {
         await uploadAndSendImage(result.assets[0].uri);
       }
     } else {

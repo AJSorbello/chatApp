@@ -26,9 +26,8 @@ const signinUser = () => {
   signInAnonymously(auth)
     .then((userCredential) => {
       // Signed in..
-      const user = userCredential.user;
       const color = background ? background[0] : '#757083'; // extract the color from the background array
-      navigation.navigate('Chat', { color: color, background: metalBG });
+      navigation.navigate('Chat', { userId: userCredential.user.uid, name: name, color: color, background: metalBG });
     })
     .catch((error) => {
       const errorCode = error.code;
