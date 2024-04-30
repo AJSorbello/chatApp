@@ -30,7 +30,6 @@ const Chat = ({ route, db, navigation, isConnected, storage }) => {
   const [messageCount, setMessageCount] = useState(0);
 const onSend = useCallback(
   async (newMessages = []) => {
-
     const message = { 
       ...newMessages[0], 
       user: { 
@@ -48,11 +47,6 @@ const onSend = useCallback(
 
     try {
       await addDoc(collection(db, "messages"), message);
-      setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, newMessages)
-        
-      );
-      
 
       setMessageCount((prevCount) => {
         const newCount = prevCount + 1; // increment the message count
