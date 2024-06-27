@@ -31,8 +31,75 @@ The Mobile Chat App is a native chat application designed for various user group
 - Images stored in Firebase Cloud Storage.
 - Ability to read user's location data.
 
-## **Author**
+## **Setup and Installation**
+
+### **Prerequisites**
+- Node.js and npm (Node Package Manager)
+- Expo CLI
+- Firebase account with Firestore and Firebase Authentication configured
+
+
+### **Step-by-Step Guide**
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/mobile-chat-app.git
+   cd mobile-chat-app
+
+2. **Install dependencies**
+   
+npm install
+
+
+3. **Set up Firebase**
+   
+- Create a Firebase project on the Firebase Console.
+- Add an iOS and Android app to your project.
+- Follow the instructions to download the google-services.json (for Android) and GoogleService-Info.plist (for iOS) files and place them in the appropriate locations in your project.
+- Enable Firestore Database and Firebase Authentication.
+
+4. **Configure Firebase in your app**
+
+- Create a firebaseConfig.js file in your project's root directory.
+- Add your Firebase project configuration details to firebaseConfig.js:
+
+import firebase from 'firebase/app';
+import 'firebase/firestore';
+import 'firebase/auth';
+
+const firebaseConfig = {
+  apiKey: 'YOUR_API_KEY',
+  authDomain: 'YOUR_AUTH_DOMAIN',
+  projectId: 'YOUR_PROJECT_ID',
+  storageBucket: 'YOUR_STORAGE_BUCKET',
+  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+  appId: 'YOUR_APP_ID',
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+export { firebase };
+
+
+
+5. **Start the Expo server**
+- expo start
+```
+
+6. **Run the app on your device or simulator**
+
+- For iOS: Press 'i' to open in iOS simulator (macOS only).
+
+- For Android: Press a to open in Android Emulator, or scan the QR code with the Expo Go app on your Android device.
+
+```
+
+Author
 AJ Sorbello
 
-## **License**
+**GitHub Link**: [AJSorbello/chatApp](https://github.com/AJSorbello/chatApp)
+
+License
 This project is licensed under the AJ Sorbello License.
